@@ -1,5 +1,5 @@
 
 extern crate libc;
 
-mod elev_io;
-pub mod elev;
+mod hw_io;
+pub mod elev_io;
