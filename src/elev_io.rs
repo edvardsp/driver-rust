@@ -51,7 +51,7 @@ impl Signal {
     }
 }
 
-const MOTOR_SPEED: usize = 200;
+const MOTOR_SPEED: usize = 2800;
 
 impl ElevIo {
     pub fn new() -> io::Result<Self> {
