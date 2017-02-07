@@ -51,15 +51,14 @@ impl HwIo {
         for offset in 1..8 {
             for port in &PORTS {
                 let status = unsafe { 
-                    comedi_dio_config(it, port.subdev, offset + port.chan_offset, port.dir)
+                    comedi_dio_config(it, port.subdev, 
+                                          offset + port.chan_offset, 
+                                          port.dir)
                 };
                 if status != 0 {
-                    return Err(io::Error::new(
-                            io::ErrorKind::Other, 
-                            format!("comedi_dio_config failed, ({},{},{})", 
-                                    port.subdev, 
-                                    offset + port.chan_offset, 
-                                    port.dir)));
+                    let msg = format!("comedi_dio_config failed, ({},{},{})", 
+                                      port.subdev, offset + port.chan_offset, port.dir)));
+                    return Err(io::Error::new(io::ErrorKind::Other, msg);
                 }
             }
         }

@@ -1,5 +1,5 @@
 
-#![allow(identity_op)]
+#![cfg_attr(feature="clippy", allow(identity_op))]
 #![allow(dead_code)]
 
 use std::io;
