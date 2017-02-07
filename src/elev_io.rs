@@ -1,4 +1,5 @@
 
+#![allow(identity_op)]
 #![allow(dead_code)]
 
 use std::io;
@@ -157,8 +158,8 @@ impl ElevIo {
 
     pub fn get_floor_signal(&self) -> io::Result<Floor> {
         const FLOOR_SENSOR_ADDR: [usize; 4] = [ 0x200+4, 0x200+5, 0x200+6, 0x200+7 ];
-        for floor in 0..FLOOR_SENSOR_ADDR.len() {
-            if self.io.read_bit(FLOOR_SENSOR_ADDR[floor])? != 0 {
+        for (floor, addr) in FLOOR_SENSOR_ADDR.iter().enumerate() {
+            if self.io.read_bit(*addr)? != 0 {
                 return Ok(Floor::At(floor));
             }
         }
