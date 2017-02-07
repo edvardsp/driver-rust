@@ -47,8 +47,6 @@ impl Signal {
     }
 }
 
-const MOTOR: usize = 0x100;
-const MOTORDIR: usize = 0x315;
 const MOTOR_SPEED: usize = 200;
 
 impl ElevIo {
@@ -60,15 +58,17 @@ impl ElevIo {
     }
 
     pub fn set_motor_dir(&self, dir: MotorDir) -> io::Result<()> {
+        const MOTOR_ADDR: usize    = 0x100+0;
+        const MOTORDIR_ADDR: usize = 0x300+15;
         match dir {
-            MotorDir::Up => self.io.write_analog(MOTOR, 0)?,
-            MotorDir::Down => {
-                self.io.clear_bit(MOTORDIR)?;
-                self.io.write_analog(MOTOR, MOTOR_SPEED)?;
+            MotorDir::Stop => self.io.write_analog(MOTOR_ADDR, 0)?,
+            MotorDir::Up => {
+                self.io.clear_bit(MOTORDIR_ADDR)?;
+                self.io.write_analog(MOTOR_ADDR, MOTOR_SPEED)?;
             },
-            MotorDir::Stop => {
-                self.io.set_bit(MOTORDIR)?;
-                self.io.write_analog(MOTOR, MOTOR_SPEED)?;
+            MotorDir::Down => {
+                self.io.set_bit(MOTORDIR_ADDR)?;
+                self.io.write_analog(MOTOR_ADDR, MOTOR_SPEED)?;
             },
         };
         Ok(())
@@ -86,9 +86,9 @@ impl ElevIo {
     }
 
     pub fn set_button_light(&self, button: Button, mode: Light) -> io::Result<()> {
-        const CALL_UP_ADDR: [usize; 3]   = [ 0x309, 0x308, 0x306 ];
-        const CALL_DOWN_ADDR: [usize; 3] = [ 0x307, 0x305, 0x304 ];
-        const INTERNAL_ADDR: [usize; 4]  = [ 0x313, 0x312, 0x311, 0x310 ];
+        const CALL_UP_ADDR: [usize; 3]   = [ 0x300+9, 0x300+8, 0x300+6 ];
+        const CALL_DOWN_ADDR: [usize; 3] = [ 0x300+7, 0x300+5, 0x300+4 ];
+        const INTERNAL_ADDR: [usize; 4]  = [ 0x300+13, 0x300+12, 0x300+11, 0x300+10 ];
         let addr = match button {
             Button::CallUp(floor @ 0...SEC_TOP) => CALL_UP_ADDR[floor],
             Button::CallDown(floor @ 1...TOP) => CALL_DOWN_ADDR[floor-1],
@@ -104,7 +104,7 @@ impl ElevIo {
     }
 
     pub fn set_floor_light(&self, floor: Floor) -> io::Result<()> {
-        const FLOOR_LIGHT_ADDR: [usize; 2] = [ 0x300, 0x301 ];
+        const FLOOR_LIGHT_ADDR: [usize; 2] = [ 0x300+0, 0x300+1 ];
         if floor > TOP {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "given floor is not supported"));
         }
@@ -116,7 +116,7 @@ impl ElevIo {
     }
 
     pub fn set_door_light(&self, mode: Light) -> io::Result<()> {
-        const DOOR_LIGHT_ADDR: usize = 0x303;
+        const DOOR_LIGHT_ADDR: usize = 0x300+3;
         match mode {
             Light::On => self.io.set_bit(DOOR_LIGHT_ADDR)?,
             Light::Off => self.io.clear_bit(DOOR_LIGHT_ADDR)?,
@@ -125,7 +125,7 @@ impl ElevIo {
     }
 
     pub fn set_stop_light(&self, mode: Light) -> io::Result<()> {
-        const STOP_LIGT_ADDR: usize = 0x314;
+        const STOP_LIGT_ADDR: usize = 0x300+14;
         match mode {
             Light::On => self.io.set_bit(STOP_LIGT_ADDR)?,
             Light::Off => self.io.clear_bit(STOP_LIGT_ADDR)?,
@@ -134,9 +134,9 @@ impl ElevIo {
     }
 
     pub fn get_button_signal(&self, button: Button) -> io::Result<Signal> {
-        const CALL_UP_ADDR: [usize; 3] = [ 0x317, 0x316, 0x201 ];
-        const CALL_DOWN_ADDR: [usize; 3] = [ 0x200, 0x202, 0x203 ];
-        const INTERNAL_ADDR: [usize; 4] = [ 0x312, 0x320, 0x319, 0x318 ];
+        const CALL_UP_ADDR: [usize; 3] = [ 0x300+17, 0x300+16, 0x200+1 ];
+        const CALL_DOWN_ADDR: [usize; 3] = [ 0x200+0, 0x200+2, 0x200+3 ];
+        const INTERNAL_ADDR: [usize; 4] = [ 0x300+21, 0x300+20, 0x300+19, 0x300+18 ];
         let addr = match button {
             Button::CallUp(floor @ 0...SEC_TOP) => CALL_UP_ADDR[floor],
             Button::CallDown(floor @ 1...TOP) => CALL_DOWN_ADDR[floor-1],
@@ -148,7 +148,7 @@ impl ElevIo {
     }
 
     pub fn get_floor_signal(&self, floor: Floor) -> io::Result<Signal> {
-        const FLOOR_SENSOR_ADDR: [usize; 4] = [ 0x204, 0x205, 0x206, 0x207 ];
+        const FLOOR_SENSOR_ADDR: [usize; 4] = [ 0x200+4, 0x200+5, 0x200+6, 0x200+7 ];
         if floor > TOP {
         }
         let value = match floor {
@@ -160,12 +160,12 @@ impl ElevIo {
     }
 
     pub fn get_stop_signal(&self) -> io::Result<Signal> {
-        const STOP_SENSOR_ADDR: usize = 0x322;
+        const STOP_SENSOR_ADDR: usize = 0x300+22;
         Ok(Signal::new(self.io.read_bit(STOP_SENSOR_ADDR)?))
     }
 
     pub fn get_obstr_signal(&self) -> io::Result<Signal> {
-        const OBSTR_SENSOR_ADDR: usize = 0x323;
+        const OBSTR_SENSOR_ADDR: usize = 0x300+23;
         Ok(Signal::new(self.io.read_bit(OBSTR_SENSOR_ADDR)?))
     }
     
@@ -177,10 +177,7 @@ mod tests {
 
     #[test]
     fn test_elev_io_init() {
-        if let Err(err) = ElevIo::new() {
-            println!("{}", err);
-        }
-        
+        assert!(ElevIo::new().is_ok(), "ElevIo::new failed");
     }
 }
 

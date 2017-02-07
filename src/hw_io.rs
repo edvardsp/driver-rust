@@ -70,38 +70,38 @@ impl HwIo {
     pub fn set_bit(&self, channel: usize) -> io::Result<()> {
         let ch = channel as c_uint;
         let ret = unsafe { comedi_dio_write(self.it, ch >> 8, ch & 0xff, 1) };
-        if ret == 0 { Ok(()) }
-        else { Err(io::Error::new(io::ErrorKind::Other, "comedi_dio_write failed")) }
+        if ret == 1 { Ok(()) }
+        else { Err(io::Error::new(io::ErrorKind::Other, format!("set_bit: comedi_dio_write[0x{:x}]) failed", channel))) }
     }
 
     pub fn clear_bit(&self, channel: usize) -> io::Result<()> {
         let ch = channel as c_uint;
         let ret = unsafe { comedi_dio_write(self.it, ch >> 8, ch & 0xff, 0) };
-        if ret == 0 { Ok(()) }
-        else { Err(io::Error::new(io::ErrorKind::Other, "comedi_dio_write failed")) }
+        if ret == 1 { Ok(()) }
+        else { Err(io::Error::new(io::ErrorKind::Other, format!("clear_bit: comedi_dio_write failed[0x{:x}]", channel))) }
     }
 
     pub fn read_bit(&self, channel: usize) -> io::Result<usize> {
         let ch = channel as c_uint;
         let mut data: c_uint = 0;
         let ret = unsafe { comedi_dio_read(self.it, ch >> 8, ch & 0xff, &mut data as *mut c_uint) };
-        if ret == 0 { Ok(data as usize) }
-        else { Err(io::Error::new(io::ErrorKind::Other, "comedi_dio_read failed")) }
+        if ret == 1 { Ok(data as usize) }
+        else { Err(io::Error::new(io::ErrorKind::Other, format!("read_bit: comedi_dio_read[0x{:x}] failed", channel))) }
     }
 
     pub fn write_analog(&self, channel: usize, value: usize) -> io::Result<()> {
         let ch = channel as c_uint;
         let ret = unsafe { comedi_data_write(self.it, ch >> 8, ch & 0xff, 0, AREF_GROUND, value as c_uint) };
-        if ret == 0 { Ok(()) }
-        else { Err(io::Error::new(io::ErrorKind::Other, "comedi_data_write failed")) }
+        if ret == 1 { Ok(()) }
+        else { Err(io::Error::new(io::ErrorKind::Other, format!("wrte_analog: comedi_data_write[0x{:x}] failed", channel))) }
     }
 
     pub fn read_analog(&self, channel: usize) -> io::Result<usize> {
         let ch = channel as c_uint;
         let mut data: c_uint = 0;
         let ret = unsafe { comedi_data_read(self.it, ch >> 8, ch & 0xff, 0, AREF_GROUND, &mut data as *mut c_uint) };
-        if ret == 0 { Ok(data as usize) }
-        else { Err(io::Error::new(io::ErrorKind::Other, "comedi_data_read failed")) }
+        if ret == 1 { Ok(data as usize) }
+        else { Err(io::Error::new(io::ErrorKind::Other, format!("read_analog: comedi_data_read[0x{:x}] failed", channel))) }
     }
 }
 
