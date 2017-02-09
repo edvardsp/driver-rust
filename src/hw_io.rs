@@ -57,8 +57,8 @@ impl HwIo {
                 };
                 if status != 0 {
                     let msg = format!("comedi_dio_config failed, ({},{},{})", 
-                                      port.subdev, offset + port.chan_offset, port.dir)));
-                    return Err(io::Error::new(io::ErrorKind::Other, msg);
+                                      port.subdev, offset + port.chan_offset, port.dir);
+                    return Err(io::Error::new(io::ErrorKind::Other, msg));
                 }
             }
         }
